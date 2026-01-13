@@ -1,0 +1,36 @@
+Online Voting System Project Architecture
+online-voting/
+│
+├── client/                # Browser side
+│   ├── index.html
+│   ├── vote.js             # Encrypts vote + creates proof
+│   └── crypto.js           # ElGamal, ZK logic (client copy)
+│
+├── server/                # Bulletin board
+│   ├── app.py              # FastAPI / Flask
+│   ├── board.py            # Append-only ballot store
+│   ├── merkle.py           # Tamper-evident log
+│   └── auth.py             # Voter token validation
+│
+├── trustees/              # Key holders
+│   ├── keygen.py           # Distributed key generation
+│   ├── decrypt.py          # Partial decryptions
+│   └── proofs.py           # ZK proofs of correct decryption
+│
+├── crypto/                # Core math (shared)
+│   ├── elgamal.py
+│   ├── threshold.py
+│   ├── zk_proofs.py
+│   └── utils.py
+│
+├── verifier/              # Public auditor
+│   ├── verify_votes.py
+│   ├── verify_proofs.py
+│   └── tally.py
+│
+├── tests/
+│   ├── test_crypto.py
+│   ├── test_double_voting.py
+│   └── test_tampering.py
+│
+└── README.md               # Threat model + design
