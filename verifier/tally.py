@@ -108,4 +108,14 @@ def verify_election(transcript: ElectionTranscript, threshold: int)-> bool:
 
     # 3. Verify enough descryption shares exist
     if len(transcript.shares) < threshold:
-        
+        print("Not enough decryption shares")
+        return False
+    
+    # 4. Verify each dectyption share
+    for share in transcript.shares:
+        if not verify_share(share, transcript.public_key, aggregated):
+            print(f"Invalid decryption share from trustee {share.trustee_id}")
+            return False
+    
+    # If all checks passed, the election is cryptographically sound
+    return True
