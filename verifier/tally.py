@@ -8,17 +8,11 @@ Nothing is trusted. Everything is checked.
 
 from dataclasses import dataclass
 from typing import List
-
+from crypto.elgamal import ElGamalCiphertext
 
 # PROTOCOL OBJECTS:
 
-class Ciphertext:
-    """
-    Represents an encrypted vote.
-    For now  this is just a placeholder for cryptographic data.
-    """
-    c1: int
-    c2: int
+Ciphertext = ElGamalCiphertext
 
 @dataclass
 class BallotProof:
@@ -76,18 +70,16 @@ def verify_share(share: DecryptionShare, public_key: int, aggregated_ciphertext:
     """
     return True
 
-def aggregate_ciphertexts(ciphertext: List[Ciphertext])-> Ciphertext:
+def aggregate_ciphertexts(ciphertexts: List[Ciphertext])-> Ciphertext:
     """
     Combine all encrypted votes into one encrypted tally.
 
     This will later use ElGamal homomorphism.
     """
-    c1 = 1
-    c2 = 2
-    for ct in ciphertext:
-        c1 *= ct.c1
-        c2 *=ct.c2
-    return Ciphertext(c1, c2)
+    total = ciphertexts[0]
+    for ct in ciphertexts[1:]:
+        total = total*ct
+    return total
 
 def verify_election(transcript: ElectionTranscript, threshold: int)-> bool:
     """

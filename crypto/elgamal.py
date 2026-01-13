@@ -7,6 +7,7 @@ That makes ciphertext multiplication correspond to vote addition.
 """
 
 import secrets
+from crypto.encoding import encode_vote
 
 class ElGamalPublicKey:
     def __init__(self, p, g, h):
@@ -53,4 +54,29 @@ def keygen():
     h = pow(G, x, P)
     return ElGamalPrivateKey(P, G, h), ElGamalPrivateKey(P, G, x)
 
-def 
+
+def encrypt(pk: ElGamalPublicKey, vote:int)-> ElGamalCiphertext:
+    """
+    Encrypt g^m, not m itself.
+    """
+    m = encode_vote(vote)
+
+    r = secrets.randbelow(pk.p - 2) + 1
+    c1 = pow(pk.g, r, pk.p)
+    c2 = (pow(pk.h, r, pk.p) * pow(pk.g, m, pk.p)) % pk.p
+    return ElGamalCiphertext(pk.p, c1, c2)
+
+
+def decrypt(sk: ElGamalPrivateKey, ct: ElGamalCiphertext) -> int:
+    """
+    Decrypts to g^m. We then brute-force m.
+    """
+    s = pow(ct.c1, sk.x, sk.p)
+    gm = (ct.c2 * pow(s, -1, sk.p)) % sk.p
+
+    # Brute- force discrete log (works only for small sums)
+    for m in range(0, 1000):
+        if pow(sk.g, m, sk.p) == gm:
+            return m
+        
+    raise ValueError("Discrete log not found (tally too large)")
