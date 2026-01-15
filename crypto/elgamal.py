@@ -8,6 +8,8 @@ That makes ciphertext multiplication correspond to vote addition.
 
 import secrets
 from crypto.encoding import encode_vote
+from crypto.zk_ballot import prove_bit
+
 
 class ElGamalPublicKey:
     def __init__(self, p, g, h):
@@ -60,11 +62,15 @@ def encrypt(pk: ElGamalPublicKey, vote:int)-> ElGamalCiphertext:
     Encrypt g^m, not m itself.
     """
     m = encode_vote(vote)
-
     r = secrets.randbelow(pk.p - 2) + 1
+    
     c1 = pow(pk.g, r, pk.p)
     c2 = (pow(pk.h, r, pk.p) * pow(pk.g, m, pk.p)) % pk.p
-    return ElGamalCiphertext(pk.p, c1, c2)
+
+    ct = ElGamalCiphertext(pk.p, c1, c2)
+    proof = prove_bit(pk, ct, m, r)
+
+    return ct, proof
 
 
 def decrypt(sk: ElGamalPrivateKey, ct: ElGamalCiphertext) -> int:
