@@ -9,6 +9,8 @@ Nothing is trusted. Everything is checked.
 from dataclasses import dataclass
 from typing import List
 from crypto.elgamal import ElGamalCiphertext
+from crypto.zk_ballot import verify_bit
+
 
 # PROTOCOL OBJECTS:
 
@@ -60,7 +62,7 @@ def verify_ballot(ballot: Ballot, public_key:int) -> bool:
     """
 
     # Placeholder: we accept all ballots for now
-    return True
+    return verify_bit(public_key, ballot.ciphertext, ballot.proof)
 
 def verify_share(share: DecryptionShare, public_key: int, aggregated_ciphertext: Ciphertext) -> bool:
     """
