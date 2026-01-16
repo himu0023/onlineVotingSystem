@@ -10,6 +10,7 @@ from dataclasses import dataclass
 from typing import List
 from crypto.elgamal import ElGamalCiphertext
 from crypto.zk_ballot import verify_bit
+from trustees.decrypt import verify_partial_decryption, combine_partial_decryptions
 
 
 # PROTOCOL OBJECTS:
@@ -72,44 +73,82 @@ def verify_share(share: DecryptionShare, public_key: int, aggregated_ciphertext:
     """
     return True
 
-def aggregate_ciphertexts(ciphertexts: List[Ciphertext])-> Ciphertext:
+def aggregate_ciphertexts(ciphertexts: List[ElGamalCiphertext])-> ElGamalCiphertext:
     """
-    Combine all encrypted votes into one encrypted tally.
-
-    This will later use ElGamal homomorphism.
+    Homomorphically combine all encryped ballots.
     """
+    if len(ciphertexts) ==0:
+        raise ValueError("No ballots submitted")
+   
     total = ciphertexts[0]
+
     for ct in ciphertexts[1:]:
         total = total*ct
+
     return total
 
-def verify_election(transcript: ElectionTranscript, threshold: int)-> bool:
-    """
-    The core truth function.
 
-    Return Ture if and only if the election transcript is valid.
+
+def verify_election(transcript: ElectionTranscript, threshold: int) -> int:
+    """
+    Verifies election and returns final tally.
+
+    Raises exception if anything is invalid.
     """
 
-    # 1. Verify all ballots
+    pk = transcript.public_key
+
+    # 1️⃣ Verify all ballots (ZK proofs)
+
     for ballot in transcript.ballots:
-        if not verify_ballot(ballot, transcript.public_key):
-            print("Invlaid ballot detected")
-            return False
-        
-    # 2. Aggregate encrypted votes
-    ciphertexts = [b.ciphertext for b in transcript.ballots]
-    aggregated = aggregate_ciphertexts(ciphertexts)
+        valid = verify_bit(pk, ballot.ciphertext, ballot.proof)
+        if not valid:
+            raise ValueError("Invalid ballot proof detected")
 
-    # 3. Verify enough descryption shares exist
+    # 2️⃣ Homomorphic aggregation
+
+    ciphertexts = [b.ciphertext for b in transcript.ballots]
+    aggregated_ciphertext = aggregate_ciphertexts(ciphertexts)
+
+    # 3️⃣ Threshold check
+
     if len(transcript.shares) < threshold:
-        print("Not enough decryption shares")
-        return False
-    
-    # 4. Verify each dectyption share
+        raise ValueError("Not enough decryption shares")
+
+    # 4️⃣ Verify each trustee decryption proof
+
+    valid_partials = []
+
     for share in transcript.shares:
-        if not verify_share(share, transcript.public_key, aggregated):
-            print(f"Invalid decryption share from trustee {share.trustee_id}")
-            return False
+        ok = verify_partial_decryption(pk, aggregated_ciphertext, share)
+        if not ok:
+            raise ValueError(f"Invalid trustee proof: Trustee {share.trustee_id}")
+
+        valid_partials.append(share)
+
+    # 5️⃣ Combine partial decryptions
+
+    gm = combine_partial_decryptions(pk, aggregated_ciphertext, valid_partials)
+
+    # 6️⃣ Decode final tally (brute-force discrete log)
+
+    tally = brute_force_discrete_log(pk.g, gm, pk.p)
+
+    return tally
     
-    # If all checks passed, the election is cryptographically sound
-    return True
+# HELPER 
+
+def brute_force_discrete_log(g, value, p, limit = 10000):
+    """
+    Because this is a demo system, we brute-force tally extraction.
+
+    Works because number of voters is small.
+    """
+
+    cur = 1
+    for i in range(limit):
+        if cur == value:
+            return i
+        cur = (cur*g)%p
+
+    raise ValueError("Tally too large or invalid")

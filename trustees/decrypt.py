@@ -68,7 +68,7 @@ def verify_partial_decryption(pk, ct: ElGamalCiphertext, pd: PartialDecryption):
     
     return True
 
-def combines_partial_decryptions(pk, ct: ElGamalCiphertext, partials):
+def combine_partial_decryptions(pk, ct: ElGamalCiphertext, partials):
     """
     Combines partial decryptions to recover g^{sum(votes)}
     """
