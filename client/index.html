@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Secure Online Voting</title>
+    </head>
+
+    <body>
+        <h2>
+            Fraud-Resistant Online Voting Demo
+        </h2>
+
+        <button onclick="getToken()">Get Voting Token</button>
+
+        <p id="tokenStatus"></p>
+
+        <hr>
+
+        <label>
+            <input type="radio" name="vote" value="1"> YES
+        </label>
+
+        <br><br>
+
+        <button onclick="castVote()">Submit Vote</button>
+
+        <p id="status"></p>
+    </body>
+
+    <script src="api.js"></script>
+    <script src="vote.js"></script>
+</html>
