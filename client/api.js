@@ -13,3 +13,14 @@ async function getToken(){
 
     document.getElementById("tokenStatus").innerText = "Token issued (stored locally).";
 }
+
+// Submit encryplted ballot 
+async function submitBallot(payload){
+    const res = await fetch(`${SERVER_URL}/submit`,{
+        method : "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(payload)
+    });
+
+    return await res.json();
+}
