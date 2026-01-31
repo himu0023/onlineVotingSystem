@@ -1,3 +1,11 @@
+"""
+Invalid ballot injection attack
+
+GOAL : Attackers submits encrypted vote = 5 instead of 1. 
+Expected : Verifier must reject
+"""
+ 
+
 import pytest 
 
 from crypto.elgamal import keygen, encrypt
