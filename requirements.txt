@@ -1,0 +1,15 @@
+# Python version
+Python>=3.10
+
+# Web API server 
+fastapi 
+uvicorn 
+
+# Cryptography (signatures, hashing primitives)
+cryptography 
+
+# Testing framework 
+pytest
+
+# Multipart/ form handling (FastAPI dependency)
+python-multipart
